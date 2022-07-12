@@ -1,6 +1,8 @@
 package algorithm.started;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
@@ -554,9 +556,298 @@ public class BFSOrDFSSolution {
         }
     }
 
-    public static void main(String[] args) {
-        char[][] grid = new char[][] {{1, 1, 0, 0, 0}, {1, 1, 0, 0, 0}, {0, 0, 1, 0, 0}, {0, 0, 0, 1, 1}};
+    /**
+     * 547 省份数量
+     *
+     * 有 n 个城市，其中一些彼此相连，另一些没有相连。如果城市 a 与城市 b 直接相连，且城市 b 与城市 c 直接相连，那么城市 a 与城市 c 间接相连。
+     * 省份 是一组直接或间接相连的城市，组内不含其他没有相连的城市。
+     * 给你一个 n x n 的矩阵 isConnected ，其中 isConnected[i][j] = 1 表示第 i 个城市和第 j 个城市直接相连，而 isConnected[i][j] = 0 表示二者不直接相连。
+     * 返回矩阵中 省份 的数量。
+     *
+     * 示例 1：
+     * 输入：isConnected = [[1,1,0],[1,1,0],[0,0,1]]
+     * 输出：2
+     * 示例 2：
+     * 输入：isConnected = [[1,0,0],[0,1,0],[0,0,1]]
+     * 输出：3
+     *
+     * 提示：
+     * 1 <= n <= 200
+     * n == isConnected.length
+     * n == isConnected[i].length
+     * isConnected[i][j] 为 1 或 0
+     * isConnected[i][i] == 1
+     * isConnected[i][j] == isConnected[j][i]
+     */
+    public int findCircleNum(int[][] isConnected) {
+        int m = isConnected.length, res = 0;
+        for (int i = 0; i < m; i++) {
+            for (int j = i; j < m; j++) {
+                if (isConnected[i][j] == 0) {
+                    continue;
+                }
+                ++res;
+                dfsFind(i, j, m, isConnected);
+            }
+        }
 
-        System.out.println(numIslands(grid));
+        return res;
+    }
+
+    private void dfsFind(int i, int j, int len, int[][] isConnected) {
+        if (isConnected[i][j] == 0) {
+            return;
+        }
+        isConnected[i][j] = 0;
+        for (int k = 0; k < len; k++) {
+            if (isConnected[i][k] == 1) {
+                isConnected[i][k] = 0;
+                dfsFind(k, i, len, isConnected);
+            }
+        }
+    }
+
+    /**
+     * 因为省份和省份是两两互相连接的，所以可以将判断二维数组的每一个值简化为仅判断一维数组
+     */
+    public int findCircleNum2(int[][] isConnected) {
+        int m = isConnected.length, res = 0;
+        boolean[] isProvince = new boolean[m];
+        for (int i = 0; i < m; i++) {
+            if (!isProvince[i]) {
+                ++res;
+                isProvince[i] = true;
+                dfsFind2(i, m, isConnected, isProvince);
+            }
+        }
+
+        return res;
+    }
+
+    private void dfsFind2(int j, int len, int[][] isConnected, boolean[] isProvince) {
+        for (int i = 0; i < len; i++) {
+            if (!isProvince[i] && isConnected[j][i] == 1) {
+                isProvince[i] = true;
+                dfsFind2(i, len, isConnected, isProvince);
+            }
+        }
+    }
+
+    /**
+     * 117
+     *
+     * 基于116升级为非完美二叉树
+     */
+    public Node connect3(Node root) {
+        if (root == null) {
+            return null;
+        }
+
+        Queue<Node> curr = new LinkedList<>();
+        Queue<Node> next = new LinkedList<>();
+        curr.offer(root);
+
+        while (curr.size() > 0) {
+            Node node = curr.poll();
+            if (node.left != null) {
+                next.offer(node.left);
+            }
+            if (node.right != null) {
+                next.offer(node.right);
+            }
+            if (curr.size() == 0) {
+                node.next = null;
+                curr = next;
+                next = new LinkedList<>();
+            } else {
+                node.next = curr.peek();
+            }
+        }
+
+        return root;
+    }
+
+    Node last = null, nextStart = null;
+
+    public Node connect4(Node root) {
+        if (root == null) {
+            return null;
+        }
+        Node start = root;
+        while (start != null) {
+            last = null;
+            nextStart = null;
+            for (Node p = start; p != null; p = p.next) {
+                if (p.left != null) {
+                    handle(p.left);
+                }
+                if (p.right != null) {
+                    handle(p.right);
+                }
+            }
+            start = nextStart;
+        }
+        return root;
+    }
+
+    public void handle(Node p) {
+        if (last != null) {
+            last.next = p;
+        }
+        if (nextStart == null) {
+            nextStart = p;
+        }
+        last = p;
+    }
+
+    /**
+     * 572
+     * 给你两棵二叉树 root 和 subRoot 。检验 root 中是否包含和 subRoot 具有相同结构和节点值的子树。如果存在，返回 true ；否则，返回 false 。
+     * 二叉树 tree 的一棵子树包括 tree 的某个节点和这个节点的所有后代节点。tree 也可以看做它自身的一棵子树。
+     *
+     * 示例 1：
+     * 输入：root = [3,4,5,1,2], subRoot = [4,1,2]
+     * 输出：true
+     * 示例 2：
+     * 输入：root = [3,4,5,1,2,null,null,null,null,0], subRoot = [4,1,2]
+     * 输出：false
+     *
+     * 提示：
+     * root 树上的节点数量范围是 [1, 2000]
+     * subRoot 树上的节点数量范围是 [1, 1000]
+     * -104 <= root.val <= 104
+     * -104 <= subRoot.val <= 104
+     */
+    public boolean isSubtree(TreeNode root, TreeNode subRoot) {
+        return dfs(root, subRoot);
+    }
+
+    private boolean dfs(TreeNode r, TreeNode s) {
+        if (r == null && s != null) {
+            return false;
+        }
+        return check(r, s) || dfs(r.left, s) || dfs(r.right, s);
+    }
+
+    private boolean check(TreeNode r, TreeNode s) {
+        if (r == null && s == null) {
+            return true;
+        }
+        if (r == null || s == null || r.val != s.val) {
+            return false;
+        }
+        return check(r.left, s.left) && check(r.right, s.right);
+    }
+
+    /**
+     * 1091
+     *
+     * 给你一个 n x n 的二进制矩阵 grid 中，返回矩阵中最短 畅通路径 的长度。如果不存在这样的路径，返回 -1 。
+     * 二进制矩阵中的 畅通路径 是一条从 左上角 单元格（即，(0, 0)）到 右下角 单元格（即，(n - 1, n - 1)）的路径，该路径同时满足下述要求：
+     * 路径途经的所有单元格都的值都是 0 。
+     * 路径中所有相邻的单元格应当在 8 个方向之一 上连通（即，相邻两单元之间彼此不同且共享一条边或者一个角）。
+     * 畅通路径的长度 是该路径途经的单元格总数。
+     *
+     * 示例 1：
+     * 输入：grid = [[0,1],[1,0]]
+     * 输出：2
+     * 示例 2：
+     * 输入：grid = [[0,0,0],[1,1,0],[1,1,0]]
+     * 输出：4
+     * 示例 3：
+     * 输入：grid = [[1,0,0],[1,1,0],[1,1,0]]
+     * 输出：-1
+     *
+     * 提示：
+     * n == grid.length
+     * n == grid[i].length
+     * 1 <= n <= 100
+     * grid[i][j] 为 0 或 1
+     */
+    static int minSteps = Integer.MAX_VALUE;
+
+    static int[][] road2 = new int[][] {{0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}};
+
+    public static int shortestPathBinaryMatrix(int[][] grid) {
+        dfs(0, 0, grid.length, 0, grid);
+        return minSteps == Integer.MAX_VALUE ? -1 : minSteps;
+    }
+
+    private static void dfs(int m, int n, int len, int steps, int[][] grid) {
+        if (m < 0 || m >= len || n < 0 || n >= len || grid[m][n] == 1 || steps > minSteps) {
+            return;
+        }
+        ++steps;
+        grid[m][n] = 1;
+        if (m == len - 1 && n == len - 1) {
+            minSteps = Math.min(steps, minSteps);
+            grid[m][n] = 0;
+            return;
+        }
+        for (int[] ints : road2) {
+            dfs(m + ints[0], n + ints[1], len, steps, grid);
+        }
+        grid[m][n] = 0;
+    }
+
+    static class Node3 {
+        int x;
+        int y;
+        int step;
+
+        public Node3(int start, int end, int step) {
+            this.x = start;
+            this.y = end;
+            this.step = step;
+        }
+    }
+
+    int[] dx3 = {0, 0, -1, 1, -1, 1, -1, 1};
+    int[] dy3 = {-1, 1, 0, 0, -1, -1, 1, 1};
+
+    /**
+     * 因为是广度优先搜索，所以第一个走到终点的，肯定是步数最少的
+     *
+     */
+    public int shortestPathBinaryMatrix2(int[][] grid) {
+
+        Node3 node = new Node3(0, 0, 2);
+        Deque<Node3> queue = new ArrayDeque<>();
+        queue.addLast(node);
+
+        int n = grid.length;
+        if (grid[0][0] == 1 || grid[n - 1][n - 1] == 1) {
+            return -1;
+        } else if (n <= 2) {
+            return n;
+        }
+        while (!queue.isEmpty()) {
+            Node3 cur = queue.removeFirst();
+            int x = cur.x;
+            int y = cur.y;
+            int step = cur.step;
+            for (int i = 0; i < 8; i++) {
+                int newX = x + dx[i];
+                int newY = y + dy[i];
+                if (0 <= newX && newX < n && 0 <= newY && newY < n && grid[newX][newY] == 0) {
+                    //找到终点
+                    if (newX == n - 1 && newY == n - 1) {
+                        return step;
+                    }
+                    queue.addLast(new Node3(newX, newY, step + 1));
+                    grid[newX][newY] = 1; //标记已遍历过，避免重复
+                }
+            }
+        }
+        return -1;
+    }
+
+
+    public static void main(String[] args) {
+        int[][] grid = new int[][] {{0, 1, 0, 0, 1, 1, 0}, {1, 0, 0, 0, 0, 0, 0}, {1, 0, 0, 1, 1, 1, 1}, {0, 1, 0, 0, 0, 0, 0},
+                {1, 0, 0, 0, 0, 0, 1}, {1, 0, 0, 1, 0, 0, 0}, {1, 0, 1, 0, 0, 1, 0}};
+        //[[0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0],[0,0,0,1,0,0,0,1],[0,0,1,0,0,0,0,1],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,1,0,1,0],[0,0,0,1,0,0,1,0]]
+
+        System.out.println(shortestPathBinaryMatrix(grid));
     }
 }
