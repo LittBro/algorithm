@@ -1,9 +1,11 @@
 package algorithm.started;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -807,7 +809,6 @@ public class BFSOrDFSSolution {
 
     /**
      * 因为是广度优先搜索，所以第一个走到终点的，肯定是步数最少的
-     *
      */
     public int shortestPathBinaryMatrix2(int[][] grid) {
 
@@ -840,6 +841,99 @@ public class BFSOrDFSSolution {
             }
         }
         return -1;
+    }
+
+    /**
+     * 130. 被围绕的区域
+     *
+     * 给你一个 m x n 的矩阵 board ，由若干字符 'X' 和 'O' ，找到所有被 'X' 围绕的区域，并将这些区域里所有的'O' 用 'X' 填充。
+     *
+     * 示例 1：
+     * 输入：board = [["X","X","X","X"],["X","O","O","X"],["X","X","O","X"],["X","O","X","X"]]
+     * 输出：[["X","X","X","X"],["X","X","X","X"],["X","X","X","X"],["X","O","X","X"]]
+     * 解释：被围绕的区间不会存在于边界上，换句话说，任何边界上的'O'都不会被填充为'X'。 任何不在边界上，或不与边界上的'O'相连的'O'最终都会被填充为'X'。
+     * 如果两个元素在水平或垂直方向相邻，则称它们是“相连”的。
+     * 示例 2：
+     * 输入：board = [["X"]]
+     * 输出：[["X"]]
+     *
+     * 提示：
+     * m == board.length
+     * n == board[i].length
+     * 1 <= m, n <= 200
+     * board[i][j] 为 'X' 或 'O'
+     */
+    public void solve(char[][] board) {
+        int m = board.length, n = board[0].length;
+        for (int i = 0; i < n; i++) {
+            dfs2(0, i, board);
+            dfs2(m - 1, i, board);
+        }
+        for (int i = 0; i < m; i++) {
+            dfs2(i, 0, board);
+            dfs2(i, n - 1, board);
+        }
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (board[i][j] == 'O') {
+                    board[i][j] = 'X';
+                } else if (board[i][j] == '1') {
+                    board[i][j] = 'O';
+                }
+            }
+        }
+    }
+
+    private void dfs2(int m, int n, char[][] board) {
+        if (m < 0 || m >= board.length || n < 0 || n >= board[0].length || 'X' == board[m][n] || board[m][n] == '1') {
+            return;
+        }
+        board[m][n] = '1';
+        for (int i = 0; i < 4; i++) {
+            dfs2(m + road[i][0], n + road[i][1], board);
+        }
+    }
+
+    /**
+     * 797. 所有可能的路径
+     *
+     * 给你一个有n个节点的 有向无环图（DAG），请你找出所有从节点 0到节点 n-1的路径并输出（不要求按特定顺序）
+     * graph[i]是一个从节点 i 可以访问的所有节点的列表（即从节点 i 到节点graph[i][j]存在一条有向边）。
+     *
+     * 示例 1：
+     * 输入：graph = [[1,2],[3],[3],[]]
+     * 输出：[[0,1,3],[0,2,3]]
+     * 解释：有两条路径 0 -> 1 -> 3 和 0 -> 2 -> 3
+     * 示例 2：
+     * 输入：graph = [[4,3,1],[3,2,4],[3],[4],[]]
+     * 输出：[[0,4],[0,3,4],[0,1,3,4],[0,1,2,3,4],[0,1,4]]
+     *
+     * 提示：
+     * n == graph.length
+     * 2 <= n <= 15
+     * 0 <= graph[i][j] < n
+     * graph[i][j] != i（即不存在自环）
+     * graph[i] 中的所有元素 互不相同
+     * 保证输入为 有向无环图（DAG）
+     */
+    List<List<Integer>> res = new ArrayList<>();
+
+    public List<List<Integer>> allPathsSourceTarget(int[][] graph) {
+        dfs(new ArrayList<>(), 0, graph);
+        return res;
+    }
+
+    private void dfs(List<Integer> list, int index, int[][] graph) {
+        list.add(index);
+        if (index == graph.length - 1) {
+            res.add(new ArrayList<>(list));
+            return;
+        }
+        int len = graph[index].length;
+        for (int i = 0; i < len; i++) {
+            dfs(list, graph[index][i], graph);
+            list.remove(list.size() - 1);
+        }
     }
 
 
